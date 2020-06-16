@@ -1,5 +1,7 @@
 server:
-  port: 8088
+  port: 8083
+  servlet:
+    context-path: /flash-sale-demo
 spring:
   redis:
     host: 127.0.0.1

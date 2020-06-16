@@ -18,4 +18,6 @@ public interface IStockService extends IService<Stock> {
     boolean goodsOrder(Long goodsId, Integer count);
 
     List<Stock> findAllIdAndStock();
+
+    void countDown(Long goodsId, Integer count);
 }

@@ -10,7 +10,9 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -32,13 +34,21 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     @Override
     public boolean goodsOrder(Long goodsId, Integer count) {
         HashOperations<String, Object, Object> opsForHash = redisTemplate.opsForHash();
-        Long stock = (Long) opsForHash.get(StockInit.GOODS_STOCK_KEY, goodsId);
-        if (stock == null || stock <= 0 || stock < count) {
+        Integer stock = (Integer) opsForHash.get(StockInit.GOODS_STOCK_KEY, goodsId);
+        if (stock == null) {
+            log.info("redis 此商品[{}]秒杀已结束。stock:{}", goodsId, stock);
+            return false;
+        }
+        if (stock <= 0 || stock < count) {
             log.info("redis 库存已不充足。stock:{},count:{}", stock, count);
             return false;
         }
-        Long increment = opsForHash.increment(StockInit.GOODS_STOCK_KEY, goodsId, -count);
-        log.info("increment:{}", increment);
+        Long lastStock = opsForHash.increment(StockInit.GOODS_STOCK_KEY, goodsId, -count);
+        log.info("剩余库存 lastStock:{}", lastStock);
+        Map<String, Object> map = new HashMap<>(8);
+        map.put("id", goodsId);
+        map.put("count", count);
+        redisTemplate.convertAndSend("redis-topic", map);
         return true;
     }
 
@@ -46,5 +56,10 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     public List<Stock> findAllIdAndStock() {
 
         return stockMapper.findAllIdAndStock();
+    }
+
+    @Override
+    public void countDown(Long goodsId, Integer count) {
+        stockMapper.countDownStock(goodsId, count);
     }
 }

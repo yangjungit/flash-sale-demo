@@ -4,4 +4,10 @@
     <select id="findAllIdAndStock" resultType="com.giovanny.flashsaledemo.entity.po.Stock">
         select id,stock from stock;
     </select>
+
+    <update id="countDownStock">
+        update stock
+        set stock=stock - #{count}
+        where id=#{goodsId}
+    </update>
 </mapper>
