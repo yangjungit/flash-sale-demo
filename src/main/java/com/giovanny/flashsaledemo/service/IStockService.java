@@ -20,4 +20,7 @@ public interface IStockService extends IService<Stock> {
     List<Stock> findAllIdAndStock();
 
     void countDown(Long goodsId, Integer count);
+
+    void addGoods() throws Exception;
+
 }

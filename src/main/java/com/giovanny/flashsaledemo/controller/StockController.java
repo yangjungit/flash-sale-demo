@@ -34,7 +34,11 @@ public class StockController {
 
     @GetMapping(path = "test")
     public String test() {
-        System.out.println("hahahhhaa");
+        try {
+            stockService.addGoods();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return "success";
     }
 

@@ -1,5 +1,6 @@
 package com.giovanny.flashsaledemo.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.giovanny.flashsaledemo.entity.po.Stock;
 import com.giovanny.flashsaledemo.mapper.StockMapper;
 import com.giovanny.flashsaledemo.service.IStockService;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -61,5 +63,20 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     @Override
     public void countDown(Long goodsId, Integer count) {
         stockMapper.countDownStock(goodsId, count);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addGoods() throws Exception {
+        Stock stock = new Stock();
+        stock.setStock(500L);
+        stock.setName("vivo");
+        stock.setVersion("3");
+        QueryWrapper<Stock> wrapper = new QueryWrapper<>();
+        List<Stock> stocks1 = stockMapper.selectList(wrapper);
+        System.out.println(stocks1.size());
+        stockMapper.insert(stock);
+        List<Stock> stocks2 = stockMapper.selectList(wrapper);
+        System.out.println(stocks2.size());
     }
 }
