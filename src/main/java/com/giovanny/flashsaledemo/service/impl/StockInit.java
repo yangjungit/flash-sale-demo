@@ -1,17 +1,14 @@
 package com.giovanny.flashsaledemo.service.impl;
 
-import com.giovanny.flashsaledemo.common.BaseEntity;
 import com.giovanny.flashsaledemo.entity.po.Stock;
 import com.giovanny.flashsaledemo.service.IStockService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;

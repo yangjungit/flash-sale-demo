@@ -11,11 +11,7 @@ import lombok.experimental.Accessors;
  * @since 2020-06-15
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@Accessors(chain = true)
 public class Stock extends BaseEntity {
-
-    private static final long serialVersionUID = 1L;
 
     /**
      * 名字
@@ -28,6 +24,5 @@ public class Stock extends BaseEntity {
     private Long stock;
 
     private String version;
-
 
 }
