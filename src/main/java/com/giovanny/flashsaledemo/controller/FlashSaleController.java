@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("flash/sale")
-public class StockController {
+public class FlashSaleController {
     @Autowired
     private IStockService stockService;
 

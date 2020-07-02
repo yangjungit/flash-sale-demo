@@ -1,18 +1,19 @@
 package com.giovanny.flashsaledemo.entity.po;
 
-import com.giovanny.flashsaledemo.common.BaseEntity;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
+
 
 /**
- *
  * @author YangJun
  * @since 2020-06-15
  */
 @Data
-public class Stock extends BaseEntity {
+public class Stock{
 
+    @TableId(type = IdType.AUTO)
+    private Long id;
     /**
      * 名字
      */
