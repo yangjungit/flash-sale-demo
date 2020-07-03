@@ -1,6 +1,8 @@
 package com.giovanny.flashsaledemo.controller;
 
 
+import com.giovanny.flashsaledemo.entity.po.User;
+import org.springframework.util.Assert;
 import com.giovanny.flashsaledemo.entity.po.Stock;
 import com.giovanny.flashsaledemo.service.IStockService;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +35,7 @@ public class UserController {
     private IStockService stockService;
 
     @PostMapping
-    public String addOne(@RequestBody @Validated Stock stock) {
+    public String addOne(@RequestBody @Validated User user) {
         return null;
     }
 
