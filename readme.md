@@ -159,6 +159,230 @@ public class Receiver implements MessageListener {
 
 ## 统一异常处理DEMO
 
+GlobalExceptionAdvice.java
+
+@RestControllerAdvice 切面注解
+
+@ExceptionHandler(value={xx.class,xxx.class})  异常处理，value为处理哪些异常
+
+```java
+@RestControllerAdvice
+@Slf4j
+public class GlobalExceptionAdvice {
+
+    @ExceptionHandler(value = {
+            BindException.class,
+            MethodArgumentNotValidException.class
+    })
+    public MyResponse handle(BindException e) {
+        log.error("check system error :", e);
+        StringBuilder stringBuilder = new StringBuilder();
+        List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors();
+        fieldErrors.forEach(
+                fieldError -> {
+                    stringBuilder
+                            .append(fieldError.getField())
+                            .append(":")
+                            .append(fieldError.getDefaultMessage())
+                            .append(System.lineSeparator());
+                }
+        );
+
+        return MyResponse.failed(HttpStatus.BAD_REQUEST.value(), stringBuilder.toString());
+    }
+
+
+    @ExceptionHandler(value = ConstraintViolationException.class)
+    public MyResponse handle(ConstraintViolationException e) {
+        log.error("check system error :", e);
+        StringBuilder stringBuilder = new StringBuilder();
+
+        Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
+        constraintViolations.forEach(
+                constraintViolation -> {
+                    stringBuilder
+                            .append(constraintViolation.getInvalidValue())
+                            .append(":")
+                            .append(constraintViolation.getMessage())
+                            .append(System.lineSeparator());
+                }
+        );
+        return MyResponse.failed(HttpStatus.BAD_REQUEST.value(), stringBuilder.toString());
+    }
+
+    @ExceptionHandler(value = BaseRuntimeException.class)
+    public MyResponse handle(BaseRuntimeException e) {
+        log.error("check system error :", e);
+        return MyResponse.failed(e.getResultCode().getErrorCode(), e.getMessage());
+    }
+
+    @ExceptionHandler(value = Exception.class)
+    public MyResponse handle(Exception e) {
+        log.error("check system error :", e);
+        return MyResponse.failed(e.getMessage());
+    }
+}
+```
+
+自定义异常
+
+```java
+@Getter
+public class BaseRuntimeException extends RuntimeException {
+
+    private IResultCode resultCode;
+
+    public BaseRuntimeException(IResultCode resultCode) {
+        super();
+        this.resultCode = resultCode;
+    }
+
+    public BaseRuntimeException(Throwable cause) {
+        super(cause);
+    }
+
+    public BaseRuntimeException(Throwable cause, IResultCode resultCode) {
+        super(cause);
+        this.resultCode = resultCode;
+    }
+}
+```
+
+自定义状态码IResultCode
+
+IResultCode接口
+
+```java
+public interface IResultCode {
+    int getErrorCode();
+
+    String getErrorMessage();
+}
+```
+
+IResultCode实现类 枚举类型
+
+```java
+public enum ResultCode implements IResultCode{
+    /**
+     * 自定义code及信息
+     */
+    SYSTEM_LOGIC_ERROR(9001, "系统错误"),
+    RPC_ERROR(9002, "远程服务调用失败"),
+    AUTHENTICATION_ERROR(9003, "验证失败 请重新登录"),
+    SESSION_INVALID(9004, "session失效 请重新登录"),
+
+    VERIFY_SIGN_HEAD_MISS(9101, "sign api head param miss"),
+    VERIFY_SIGN_PUBLIC_KEY_MISS(9102, "sign api public key miss"),
+    VERIFY_SIGN_FAIL(9103, "sign api check error"),
+
+    XSTORE_UPLOAD_FAIL(9201, "xstore upload error"),
+    XSTORE_DOWNLOAD_FAIL(9202, "xstore download error"),
+    ;
+
+    private int code;
+    private String desc;
+
+    ResultCode(int code, String desc) {
+        this.code = code;
+        this.desc = desc;
+    }
+
+    @Override
+    public int getErrorCode() {
+        return this.code;
+    }
+
+    @Override
+    public String getErrorMessage() {
+        return this.desc;
+    }
+}
+```
+
+统一返回对象
+
+```java
+@Data
+@Slf4j
+public class MyResponse {
+    private int code;
+    private String message;
+    private Object data;
+
+    public MyResponse() {
+    }
+
+    public MyResponse(int code) {
+        this.code = code;
+    }
+
+    public MyResponse(Object data) {
+        this.code = 200;
+        this.data = data;
+    }
+
+    public MyResponse(int code, String message) {
+        this.code = code;
+        this.message = message;
+    }
+
+    public MyResponse(String message, Object data) {
+        this.code = 200;
+        this.message = message;
+        this.data = data;
+    }
+
+    public MyResponse(int code, String message, Object data) {
+        this.code = code;
+        this.message = message;
+        this.data = data;
+    }
+
+    public static void responseJson(ServletResponse response, MyResponse myResponse) {
+        PrintWriter out = null;
+        try {
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json");
+            out = response.getWriter();
+            out.println(JSON.toJSONString(myResponse));
+        } catch (Exception e) {
+            log.error("【JSON输出异常】" + e);
+        } finally {
+            if (out != null) {
+                out.flush();
+                out.close();
+            }
+        }
+    }
+
+
+    public static MyResponse success() {
+        return new MyResponse(200);
+    }
+
+    public static MyResponse success(String message, Object data) {
+        return new MyResponse(message, data);
+    }
+
+    public static MyResponse success(Object data) {
+        return new MyResponse(data);
+    }
+
+    public static MyResponse failed(int code, String message) {
+        return new MyResponse(code, message);
+    }
+
+    public static MyResponse failed(String message) {
+        return new MyResponse(500, message);
+    }
+
+    public static MyResponse failed(int code, String message, Object data) {
+        return new MyResponse(code, message, data);
+    }
+}
+```
+
 
 
 ## 文件模糊hash计算
@@ -274,5 +498,127 @@ log:
   path: /log
   level: info
   project-name: flash-sale-demo
+```
+
+## mybatis plus generator
+
+```java
+
+/**
+ * @packageName: MyBatisPlusGenerator
+ * @className: Generator
+ * @description: //Generator
+ * @author: YangJun
+ * @date: 2020/5/14 11:09
+ * @version: v1.0
+ **/
+public class MyBatisPlusGenerator {
+
+    public static String scanner(String something) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("请输入" + something + "：");
+        if (scanner.hasNext()) {
+            String sc = scanner.next();
+            if (!StringUtils.isBlank(sc)) {
+                return sc;
+            }
+        }
+        throw new MybatisPlusException("请输入正确的" + something + "！");
+    }
+
+    public static void main(String[] args) {
+        // 代码生成器
+        AutoGenerator mpg = new AutoGenerator();
+
+        // 全局配置
+        GlobalConfig gc = new GlobalConfig();
+        String projectPath = System.getProperty("user.dir");
+        gc.setOutputDir(projectPath + "/src/main/java");
+        gc.setAuthor("YangJun");
+        gc.setOpen(false);
+        mpg.setGlobalConfig(gc);
+
+        // 数据源配置
+        DataSourceConfig dsc = new DataSourceConfig();
+        dsc.setUrl("jdbc:mysql://localhost:3306/flash_sale?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&allowMultiQueries=true&&useSSL=true&serverTimezone=Asia/Shanghai");
+        dsc.setDriverName("com.mysql.cj.jdbc.Driver");
+        dsc.setUsername("root");
+        dsc.setPassword("123456");
+        mpg.setDataSource(dsc);
+
+        // 包配置
+        PackageConfig pc = new PackageConfig();
+        //scanner("请输入你的包名")
+        pc.setModuleName("flashsaledemo");
+        //你哪个父目录下创建包
+        pc.setParent("com.giovanny");
+        mpg.setPackageInfo(pc);
+
+        // 自定义配置
+        InjectionConfig cfg = new InjectionConfig() {
+            @Override
+            public void initMap() {
+                // to do nothing
+            }
+        };
+
+        // 如果模板引擎是 freemarker
+        String templatePath = "/templates/mapper.xml.ftl";
+        // 如果模板引擎是 velocity
+        // String templatePath = "/templates/mapper.xml.vm";
+
+        // 自定义输出配置
+        List<FileOutConfig> focList = new ArrayList<>();
+        // 自定义配置会被优先输出
+        focList.add(new FileOutConfig(templatePath) {
+            @Override
+            public String outputFile(TableInfo tableInfo) {
+                // 自定义输出文件名 ， 如果你 Entity 设置了前后缀、此处注意 xml 的名称会跟着发生变化！！
+                return projectPath + "/src/main/resources/mapper/" + pc.getModuleName()
+                        + "/" + tableInfo.getEntityName() + "Mapper" + StringPool.DOT_XML;
+            }
+        });
+        cfg.setFileOutConfigList(focList);
+        mpg.setCfg(cfg);
+
+        // 配置模板
+        TemplateConfig templateConfig = new TemplateConfig();
+
+        // 配置自定义输出模板
+        //指定自定义模板路径，注意不要带上.ftl/.vm, 会根据使用的模板引擎自动识别
+        // templateConfig.setEntity("templates/entity2.java");
+        // templateConfig.setService();
+        // templateConfig.setController();
+
+        templateConfig.setXml(null);
+        mpg.setTemplate(templateConfig);
+
+        // 策略配置,数据库表配置
+        StrategyConfig strategy = new StrategyConfig();
+        //数据库表映射到实体的命名策略
+        strategy.setNaming(NamingStrategy.underline_to_camel);
+        //数据库表字段映射到实体类的命名策略
+        strategy.setColumnNaming(NamingStrategy.underline_to_camel);
+        //自定义继承entity类，添加这一个会在生成实体类的时候继承entity
+        //strategy.setSuperEntityClass("com.wy.testCodeGenerator.entity");
+        //实体是否为lombok模型
+        strategy.setEntityLombokModel(true);
+        //生成@RestController控制器
+        strategy.setRestControllerStyle(true);
+        //是否继承controller
+        // strategy.setSuperControllerClass("com.wy.testCodeGenerator.controller");
+        //scanner("请输入表名（多个用‘,’分隔）：").split(",")   "file","apply_process","point","scan_result",
+        strategy.setInclude("stock");
+        strategy.setSuperEntityColumns("id");
+        strategy.setSuperEntityClass(BaseEntity.class);
+        //驼峰转连字符串
+        strategy.setControllerMappingHyphenStyle(true);
+        //表前缀
+        strategy.setTablePrefix(pc.getModuleName() + "_");
+        mpg.setStrategy(strategy);
+        mpg.setTemplateEngine(new FreemarkerTemplateEngine());
+        mpg.execute();
+    }
+}
 ```
 
