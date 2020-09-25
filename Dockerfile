@@ -1,4 +1,4 @@
-FROM 172.16.33.69:5000/jdk8
+FROM java:8
 VOLUME /tmp
 COPY target/flash-sale-demo-0.0.1-SNAPSHOT.jar /opt/app/app.jar
 COPY target/classes/application.yaml /opt/app/application.yaml

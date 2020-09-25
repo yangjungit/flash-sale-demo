@@ -8,7 +8,7 @@ spring:
     port: 6379
   datasource:
     name: production
-    url: jdbc:mysql://mysql:3306/flash_sale?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&allowMultiQueries=true&&useSSL=true&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://mariadb:3306/flash_sale?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&allowMultiQueries=true&&useSSL=true&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
     type: com.alibaba.druid.pool.DruidDataSource
