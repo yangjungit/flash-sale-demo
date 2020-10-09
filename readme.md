@@ -124,7 +124,7 @@ public class StockInit implements InitializingBean {
     }
 }
 ```
-消息监听。获取队列消息，盘对处理，并生成订单，减少MySql中的库存数量
+消息监听。获取队列消息，排队处理，并生成订单，减少MySql中的库存数量
 
 TODO：打算用websocket的方式将秒杀下单成功的消息推送给用户
 ```java
