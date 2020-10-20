@@ -165,7 +165,7 @@ public class Receiver implements MessageListener {
 
 在/usr/lib/systemd/system路径下增加如下图选中内容，然后重启docker
 
-![修改docker.service](.\img\修改docker.service.jpg)
+![修改docker.service](img/修改docker.service.jpg)
 
 重启docker：
 
@@ -176,7 +176,7 @@ public class Receiver implements MessageListener {
 
 ### 二、idea安装插件
 
-![idea安装docker插件](.\img\idea安装docker插件.jpg)
+![idea安装docker插件](img/idea安装docker插件.jpg)
 
 ### 三、编写dockerfile
 
@@ -207,7 +207,7 @@ COPY target/classes/application-pro.yaml /opt/app/application-pro.yaml
 
 ### 四、idea配置docker
 
-![idea配置docker](.\img\idea配置docker.jpg)
+![idea配置docker](img/idea配置docker.jpg)
 
 ### 五、项目打包
 
@@ -223,7 +223,7 @@ mvn clean package -DskipTests=true
 
 ### 六、运行dockerfile
 
-![运行dockerfile](.\img\运行dockerfile.png)
+![运行dockerfile](img/运行dockerfile.png)
 
 注意，运行dockerfile时，它是用本地target中的包打的镜像，然后push到了我们的docker中去，所以要部署最新的代码前，记得自己动手打包。
 
