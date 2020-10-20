@@ -157,6 +157,78 @@ public class Receiver implements MessageListener {
 </update>
 ```
 
+##  idea-docker一键部署
+
+### 一、Linux版docker配置：
+
+修改**docker.service**文件：
+
+在/usr/lib/systemd/system路径下增加如下图选中内容，然后重启docker
+
+![修改docker.service](.\img\修改docker.service.jpg)
+
+重启docker：
+
+```shell
+ systemctl daemon-reload
+ systemctl restart docker
+```
+
+### 二、idea安装插件
+
+![idea安装docker插件](.\img\idea安装docker插件.jpg)
+
+### 三、编写dockerfile
+
+````dockerfile
+FROM java:8
+VOLUME /tmp
+COPY target/flash-sale-demo-0.0.1-SNAPSHOT.jar /opt/app/app.jar
+COPY target/classes/application.yaml /opt/app/application.yaml
+COPY target/classes/application-pro.yaml /opt/app/application-pro.yaml
+ENTRYPOINT java -Djava.security.egd=file:/dev/./urandom -Duser.language=zh -Duser.region=CN -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai -Duser.country=CN -Do2o.profile=dev -Do2o.home=/opt/app -Xmx1024m -Xms1024m -Xmn512m -jar /opt/app/app.jar --spring.config.additional.location=application.yaml
+````
+
+没有直接申明使用哪个配置文件（dev/prod/test），因为spring boot部署运行时加载配置文件有一定的优先级，优先加载resources下的application.properties ->application.yaml-> jar包同级目录下的配置，也就是说后加载的会覆盖前面已经有的配置，所以在dockerdfile中将配置文件和jar包copy到了容器中的相同目录下了：
+
+```dockerfile
+COPY target/flash-sale-demo-0.0.1-SNAPSHOT.jar /opt/app/app.jar
+COPY target/classes/application.yaml /opt/app/application.yaml
+COPY target/classes/application-pro.yaml /opt/app/application-pro.yaml
+```
+
+然后再指定使用哪一个配置文件：
+
+````dockerfile
+ --spring.config.additional.location=application.yaml
+````
+
+这个文件中就指定了具体使用哪一个配置文件，或者时设置更多的东西，如项目端口号等等。
+
+### 四、idea配置docker
+
+![idea配置docker](.\img\idea配置docker.jpg)
+
+### 五、项目打包
+
+平常打包命令是运维帮我们写在了在Jenkins任务中的脚本里，由于我看不到命令就简单截图：
+
+![Jenkins打包java例子](.\img\Jenkins打包java例子.jpg)
+
+现在打包需要我们自己动手：
+
+````shell
+mvn clean package -DskipTests=true
+````
+
+### 六、运行dockerfile
+
+![运行dockerfile](.\img\运行dockerfile.png)
+
+注意，运行dockerfile时，它是用本地target中的包打的镜像，然后push到了我们的docker中去，所以要部署最新的代码前，记得自己动手打包。
+
+
+
 ## 统一异常处理DEMO
 
 GlobalExceptionAdvice.java
