@@ -33,9 +33,9 @@ public class StockInit implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        log.info("----初始化商品库存，将MySQL中的商品库存保存到Redis");
-        log.warn("----初始化商品库存，将MySQL中的商品库存保存到Redis");
-        log.error("----初始化商品库存，将MySQL中的商品库存保存到Redis");
+        log.info("----初始化商品库存，将MySQL中的商品库存保存到Redis----");
+        log.warn("----初始化商品库存，将MySQL中的商品库存保存到Redis----");
+        log.error("----初始化商品库存，将MySQL中的商品库存保存到Redis----");
         Map<Long, Long> stockMap = stockService.list()
                 .parallelStream()
                 .collect(Collectors.toMap(Stock::getId, Stock::getStock));

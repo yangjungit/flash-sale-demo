@@ -23,8 +23,8 @@ public class FlashSaleController {
     private IStockService stockService;
 
     @PostMapping(path = "order")
-    public String flashSale(Long goodsId, Integer count) {
-        boolean isOrder = stockService.goodsOrder(goodsId, count);
+    public String flashSale(String userId, Long goodsId, Integer count) {
+        boolean isOrder = stockService.goodsOrder(userId, goodsId, count);
         if (isOrder) {
             return "success";
         } else {

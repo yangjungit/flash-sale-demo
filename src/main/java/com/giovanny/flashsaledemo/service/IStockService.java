@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface IStockService extends IService<Stock> {
 
-    boolean goodsOrder(Long goodsId, Integer count);
+    boolean goodsOrder(String userId, Long goodsId, Integer count);
 
     List<Stock> findAllIdAndStock();
 

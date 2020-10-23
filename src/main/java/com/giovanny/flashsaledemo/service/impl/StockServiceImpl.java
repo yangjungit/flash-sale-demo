@@ -1,10 +1,10 @@
 package com.giovanny.flashsaledemo.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.giovanny.flashsaledemo.entity.po.Stock;
 import com.giovanny.flashsaledemo.mapper.StockMapper;
 import com.giovanny.flashsaledemo.service.IStockService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
@@ -34,7 +34,7 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     private RedisTemplate<String, Object> redisTemplate;
 
     @Override
-    public boolean goodsOrder(Long goodsId, Integer count) {
+    public boolean goodsOrder(String userId, Long goodsId, Integer count) {
         HashOperations<String, Object, Object> opsForHash = redisTemplate.opsForHash();
         Integer stock = (Integer) opsForHash.get(StockInit.GOODS_STOCK_KEY, goodsId);
         if (stock == null) {
@@ -50,6 +50,7 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         Map<String, Object> map = new HashMap<>(8);
         map.put("id", goodsId);
         map.put("count", count);
+        map.put("userId", userId);
         redisTemplate.convertAndSend("redis-topic", map);
         return true;
     }
