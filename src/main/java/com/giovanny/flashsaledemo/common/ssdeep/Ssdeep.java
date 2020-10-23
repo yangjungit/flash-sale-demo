@@ -23,6 +23,19 @@ import java.io.StringWriter;
  * limitations under the License.
  */
 
+/**
+ * 获取文件模糊hash
+ *
+ * FileUtil.java
+ * public static String getFileHash(String fileType, InputStream is);
+ *
+ * 文件模糊hash比较
+ *
+ * Ssdeep.java
+ * public int Compare(String signa1, String signa2)
+ *
+ */
+
 public class Ssdeep {
     public final int SPAMSUM_LENGTH = 64;
     public final int FUZZY_MAX_RESULT = (SPAMSUM_LENGTH + (SPAMSUM_LENGTH / 2 + 20));

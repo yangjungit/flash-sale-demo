@@ -1,6 +1,5 @@
-# flash-sale-demo
+# 商品秒杀DEMO-flash-sale-demo
 
-## 商品秒杀DEMO
 **商品库存PO**，数据库表列有以下字段及id字段，id字段为了简便就用的数据库自增
 
 ```java
@@ -157,9 +156,9 @@ public class Receiver implements MessageListener {
 </update>
 ```
 
-##  idea-docker一键部署
+#  idea-docker一键部署
 
-### 一、Linux版docker配置：
+## 一、Linux版docker配置：
 
 修改**docker.service**文件：
 
@@ -174,11 +173,11 @@ public class Receiver implements MessageListener {
  systemctl restart docker
 ```
 
-### 二、idea安装插件
+## 二、idea安装插件
 
 ![idea安装docker插件](img/idea安装docker插件.jpg)
 
-### 三、编写dockerfile
+## 三、编写dockerfile
 
 ````dockerfile
 FROM java:8
@@ -205,11 +204,11 @@ COPY target/classes/application-pro.yaml /opt/app/application-pro.yaml
 
 这个文件中就指定了具体使用哪一个配置文件，或者时设置更多的东西，如项目端口号等等。
 
-### 四、idea配置docker
+## 四、idea配置docker
 
 ![idea配置docker](img/idea配置docker.jpg)
 
-### 五、项目打包
+## 五、项目打包
 
 平常打包命令是运维帮我们写在了在Jenkins任务中的脚本里，由于我看不到命令就简单截图：
 
@@ -221,7 +220,7 @@ COPY target/classes/application-pro.yaml /opt/app/application-pro.yaml
 mvn clean package -DskipTests=true
 ````
 
-### 六、运行dockerfile
+## 六、运行dockerfile
 
 ![运行dockerfile](img/运行dockerfile.png)
 
@@ -229,7 +228,7 @@ mvn clean package -DskipTests=true
 
 
 
-## 统一异常处理DEMO
+# 统一异常处理DEMO
 
 GlobalExceptionAdvice.java
 
@@ -457,23 +456,7 @@ public class MyResponse {
 
 
 
-## 文件模糊hash计算
-
-获取文件模糊hash
-
-```java
-FileUtil.java
-public static String getFileHash(String fileType, InputStream is);
-```
-
-文件模糊hash比较
-
-````java
-Ssdeep.java
-public int Compare(String signa1, String signa2)
-````
-
-## logback 日志输出
+# logback 日志输出
 
 1. 日志输出到文件并根据`LEVEL`级别将日志分类保存到不同文件
 2. 通过异步输出日志减少磁盘`IO`提高性能
@@ -572,7 +555,7 @@ log:
   project-name: flash-sale-demo
 ```
 
-## mybatis plus generator
+# mybatis plus generator
 
 ```java
 
@@ -694,7 +677,11 @@ public class MyBatisPlusGenerator {
 }
 ```
 
-## nginx 限流配置
+# 限流方案
+
+## 一、Nginx限流
+
+nginx 限流配置
 
 ```nginx
 01 http {
@@ -754,7 +741,120 @@ public class MyBatisPlusGenerator {
 
 第8行：更换Nginx的限流响应状态码 标准是429
 
+## 二、Sentinel限流
+
+spring boot 集成Sentinel限流组件
+
+设置依赖
+
+```xml
+		<dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+            <version>0.9.0.RELEASE</version>
+        </dependency>
+```
+
+启动dashboard：
+
+下载dashboard的har包https://github.com/alibaba/Sentinel/releases 
+
+启动
+
+````shell
+java -jar sentinel-dashboard-1.6.0.jar
+````
+
+端口默认是8080，根据需要变更 
+
+````shell
+-Dserver.port=8080 -Dcsp.sentinel.dashboard.server=localhost:8080 -Dproject.name=sentinel-dashboard
+````
+
+再启动spring boot项目，没有访问接口前，dashboard没有什么信息，可以访问一个接口就可以看到了。
+
+## 三、redis-luna
+
+令牌桶算法
+
+how？ 
+
+```http
+https://github.com/yangjungit/java-study.git
+```
+
+## 四、guawa
+
+````java
+
+/**
+ * @packageName: com.giovanny.study.controller
+ * @className: GuavaController
+ * @description: Google guava限流 有代码侵入，用起来不咋方便
+ * @author: YangJun
+ * @date: 2020/4/26 16:24
+ * @version: v1.0
+ **/
+@RestController
+@Slf4j
+public class GuavaController {
 
 
+    /**
+     * 允许限流组件每秒发放的令牌数
+     */
+    RateLimiter rateLimiter = RateLimiter.create(2);
 
+
+    /**
+     * 队列式的请求 一直等到有token为止
+     *
+     * @param count count
+     * @return MyResponse
+     */
+    @GetMapping("/tryAcquire")
+    public MyResponse tryAcquire(Integer count) {
+        //桶内令牌是否够
+        if (rateLimiter.tryAcquire(count)) {
+            log.info("success rate is {}", rateLimiter.getRate());
+            return MyResponse.success();
+        } else {
+            log.info("fail rate is {}", rateLimiter.getRate());
+            return MyResponse.failed(1001, "failed");
+        }
+    }
+
+    /**
+     * 队列式的请求 等到有token且不超过等待时间为止
+     *
+     * @param count   count
+     * @param timeout timeout
+     * @return MyResponse
+     */
+    @GetMapping("/tryAcquireTime")
+    public MyResponse tryAcquireTime(Integer count, Integer timeout) {
+        //桶内令牌是否够
+        if (rateLimiter.tryAcquire(count, timeout, TimeUnit.SECONDS)) {
+            log.info("success rate is {}", rateLimiter.getRate());
+            return MyResponse.success();
+        } else {
+            log.info("fail rate is {}", rateLimiter.getRate());
+            return MyResponse.failed(1001, "failed");
+        }
+    }
+
+    /**
+     * 请求一次，有就有，没有就没有
+     *
+     * @param count count
+     * @return MyResponse
+     */
+    @GetMapping("/acquire")
+    public MyResponse acquire(Integer count) {
+        double d = rateLimiter.acquire(count);
+        log.info("success rate is {} , return is {}", rateLimiter.getRate(), d);
+        return MyResponse.success();
+    }
+}
+````
 
