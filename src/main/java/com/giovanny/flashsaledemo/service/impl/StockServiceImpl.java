@@ -45,6 +45,8 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     @Override
     public boolean goodsOrder(String userId, Long goodsId, Integer count) {
         HashOperations<String, Object, Object> opsForHash = redisTemplate.opsForHash();
+        // 抢购减redis缓存加锁，单节点没有问题，多节点时可以考虑分布式锁，
+        // redis（抢到锁执行，没有抢到就返回没有抢购到） zookeeper（会顺序等待），感觉用zookeeper会好一点
         synchronized (OBJ_LOCK) {
             Integer stock = (Integer) opsForHash.get(StockInit.GOODS_STOCK_KEY, goodsId);
             if (stock == null) {
