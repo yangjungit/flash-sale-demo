@@ -32,21 +32,32 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     private StockMapper stockMapper;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    private final static Object OBJ_LOCK = new Object();
 
+    /**
+     * synchronized块级锁
+     *
+     * @param userId  用户id
+     * @param goodsId 商品id
+     * @param count   购买数量
+     * @return 抢购结果
+     */
     @Override
     public boolean goodsOrder(String userId, Long goodsId, Integer count) {
         HashOperations<String, Object, Object> opsForHash = redisTemplate.opsForHash();
-        Integer stock = (Integer) opsForHash.get(StockInit.GOODS_STOCK_KEY, goodsId);
-        if (stock == null) {
-            log.info("redis 此商品[{}]秒杀已结束。stock:{}", goodsId, stock);
-            return false;
+        synchronized (OBJ_LOCK) {
+            Integer stock = (Integer) opsForHash.get(StockInit.GOODS_STOCK_KEY, goodsId);
+            if (stock == null) {
+                log.info("redis 此商品[{}]秒杀已结束。stock:{}", goodsId, stock);
+                return false;
+            }
+            if (stock <= 0 || stock < count) {
+                log.info("redis 库存已不充足。stock:{},count:{}", stock, count);
+                return false;
+            }
+            Long lastStock = opsForHash.increment(StockInit.GOODS_STOCK_KEY, goodsId, -count);
+            log.info("剩余库存 lastStock:{}", lastStock);
         }
-        if (stock <= 0 || stock < count) {
-            log.info("redis 库存已不充足。stock:{},count:{}", stock, count);
-            return false;
-        }
-        Long lastStock = opsForHash.increment(StockInit.GOODS_STOCK_KEY, goodsId, -count);
-        log.info("剩余库存 lastStock:{}", lastStock);
         Map<String, Object> map = new HashMap<>(8);
         map.put("id", goodsId);
         map.put("count", count);

@@ -775,15 +775,19 @@ java -jar sentinel-dashboard-1.6.0.jar
 
 ## 三、redis-luna
 
-令牌桶算法
+**漏桶算法**
 
-how？ 
+how？ ->
 
 ```http
 https://github.com/yangjungit/java-study.git
 ```
 
-## 四、guawa
+## 四、guava
+
+**令牌桶算法**
+
+how？->
 
 ````java
 
