@@ -65,32 +65,53 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
     private StockMapper stockMapper;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    private final static Object OBJ_LOCK = new Object();
+
+    /**
+     * synchronized块级锁
+     *
+     * @param userId  用户id
+     * @param goodsId 商品id
+     * @param count   购买数量
+     * @return 抢购结果
+     */
     @Override
-    public boolean goodsOrder(Long goodsId, Integer count) {
+    public boolean goodsOrder(String userId, Long goodsId, Integer count) {
         HashOperations<String, Object, Object> opsForHash = redisTemplate.opsForHash();
-        Integer stock = (Integer) opsForHash.get(StockInit.GOODS_STOCK_KEY, goodsId);
-        if (stock == null) {
-            log.info("redis 此商品[{}]秒杀已结束。stock:{}", goodsId, stock);
-            return false;
+        // 抢购减redis缓存加锁，单节点没有问题，多节点时可以考虑分布式锁，
+        // redis（抢到锁执行，没有抢到就返回没有抢购到） zookeeper（会顺序等待），感觉用zookeeper会好一点
+        // 另外，这里就算是有多线程问题或者是对节点问题，也不会出现多卖的情况，出现少卖是可以接受的，这里只是减了redis里的库存值，真正的库存要在收到队列消息后才去减
+        synchronized (OBJ_LOCK) {
+            Integer stock = (Integer) opsForHash.get(StockInit.GOODS_STOCK_KEY, goodsId);
+            if (stock == null) {
+                log.info("redis 此商品[{}]秒杀已结束。stock:{}", goodsId, stock);
+                return false;
+            }
+            if (stock <= 0 || stock < count) {
+                log.info("redis 库存已不充足。stock:{},count:{}", stock, count);
+                return false;
+            }
+            Long lastStock = opsForHash.increment(StockInit.GOODS_STOCK_KEY, goodsId, -count);
+            log.info("剩余库存 lastStock:{}", lastStock);
         }
-        if (stock <= 0 || stock < count) {
-            log.info("redis 库存已不充足。stock:{},count:{}", stock, count);
-            return false;
-        }
-        Long lastStock = opsForHash.increment(StockInit.GOODS_STOCK_KEY, goodsId, -count);
-        log.info("剩余库存 lastStock:{}", lastStock);
         Map<String, Object> map = new HashMap<>(8);
         map.put("id", goodsId);
         map.put("count", count);
+        map.put("userId", userId);
         redisTemplate.convertAndSend("redis-topic", map);
         return true;
+    }
+
+    @Override
+    public List<Stock> findAllIdAndStock() {
+
+        return stockMapper.findAllIdAndStock();
     }
 
     @Override
     public void countDown(Long goodsId, Integer count) {
         stockMapper.countDownStock(goodsId, count);
     }
-}
 ```
 **项目启动时会初始化商品库存到Redis**，保存成hash,key:商品ID，value:商品库存 
 
@@ -862,3 +883,49 @@ public class GuavaController {
 }
 ````
 
+# MyPerf4J
+
+## 简介
+
+一个针对高并发、低延迟应用设计的高性能 Java 性能监控和统计工具。
+
+## 特性
+
+高性能: 单线程支持每秒 **1600 万次** 响应时间的记录，每次记录只花费 **63 纳秒**
+
+无侵入: 采用 **JavaAgent** 方式，对应用程序完全无侵入，无需修改应用代码
+
+低内存: 采用内存复用的方式，整个生命周期只产生极少的临时对象，不影响应用程序的 GC
+
+高精度: 采用纳秒来计算响应时间
+
+高实时: 支持秒级监控，最低 **1 秒**
+
+## 使用场景
+
+- 在**开发环境**中快速定位 Java 应用程序的性能瓶颈
+- 在**生产环境**中长期监控 Java 应用程序的性能指标
+
+## Git 地址
+
+- git clone [git@github.com](https://links.jianshu.com/go?to=mailto%3Agit%40github.com):LinShunKang/MyPerf4J.git
+
+- mvn clean package
+
+  也可以用打包好的，修改一下`myPerf4J.properties`
+
+## 本地项目配置
+
+> -javaagent:/your/path/to/MyPerf4J-ASM.jar
+
+> -DMyPerf4JPropFile=/your/path/to/myPerf4J.properties
+
+## docker配置
+
+dockerfile里面加：
+
+>-javaagent:/opt/app/classes/MyPerf4J-ASM-2.8.0/MyPerf4J-ASM-2.8.0.jar -DMyPerf4JPropFile=/opt/app/classes/MyPerf4J-ASM-2.8.0/MyPerf4J.properties
+
+> COPY target/classes/MyPerf4J-ASM-2.8.0 /opt/app/classes/MyPerf4J-ASM-2.8.0/
+
+路径可能不一样，应用时注意修改路径
