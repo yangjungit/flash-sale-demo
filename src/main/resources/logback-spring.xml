@@ -7,7 +7,7 @@
 
     <appender name="CONSOLE-LOG" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>[%d{yyyy-MM-dd' 'HH:mm:ss.sss}] [%C] [%t] [%L] [%-5p] %m%n</pattern>
+            <pattern>[%d{yyyy-MM-dd' 'HH:mm:ss.sss}] [%-5p] [%C %L] [%t]  %m%n</pattern>
         </layout>
     </appender>
     <!--获取比info级别高(包括info级别)但除error级别的日志-->
@@ -18,7 +18,7 @@
             <onMismatch>ACCEPT</onMismatch>
         </filter>
         <encoder>
-            <pattern>[%d{yyyy-MM-dd' 'HH:mm:ss.sss}] [%t] [%C] [%L] [%-5p] %msg%n</pattern>
+            <pattern>[%d{yyyy-MM-dd' 'HH:mm:ss.sss}] [%-5p] [%C %L] [%t]  %m%n</pattern>
         </encoder>
 
         <!--滚动策略-->
@@ -34,7 +34,7 @@
             <level>ERROR</level>
         </filter>
         <encoder>
-            <pattern>[%d{yyyy-MM-dd' 'HH:mm:ss.sss}] [%t] [%C] [%L] [%-5p] %msg%n</pattern>
+            <pattern>[%d{yyyy-MM-dd' 'HH:mm:ss.sss}] [%-5p] [%C %L] [%t]  %m%n</pattern>
         </encoder>
         <!--滚动策略-->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
