@@ -88,9 +88,9 @@ public class StockServiceImpl extends ServiceImpl<StockMapper, Stock> implements
         stock.setVersion("3");
         QueryWrapper<Stock> wrapper = new QueryWrapper<>();
         List<Stock> stocks1 = stockMapper.selectList(wrapper);
-        System.out.println(stocks1.size());
+        log.info("添加前：{}",stocks1.size());
         stockMapper.insert(stock);
         List<Stock> stocks2 = stockMapper.selectList(wrapper);
-        System.out.println(stocks2.size());
+        log.info("添加后：{}",stocks2.size());
     }
 }
